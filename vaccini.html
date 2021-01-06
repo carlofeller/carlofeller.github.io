@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vaccinazioni COVID-19 Italia</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+<body>
+  <div id="app">
+    <v-app>
+      <v-main>
+        <v-container fluid>
+          <h1 class="my-4 text-h3">Vaccinazioni COVID-19 Italia</h1>
+          <v-divider></v-divider>
+          <v-row v-if="regioni">
+            <v-col cols="12" sm="4" class="text-center"><h3 class="my-4 text-h5">Somministrate</h3><h4 class="my-4 text-h6">{{ regioni[0].DM0[0].C[0]}}</h4></v-col>
+            <v-col cols="12" sm="4" class="text-center"><h3 class="my-4 text-h5">Distribuite</h3><h4 class="my-4 text-h6">{{ regioni[0].DM0[0].C[2]}}</h4></v-col>
+            <v-col cols="12" sm="4" class="text-center"><h3 class="my-4 text-h5">Percentuale</h3><h4 class="my-4 text-h6">{{ (regioni[0].DM0[0].C[1]*100).toFixed(2)}} %</h4></v-col>
+          </v-row>
+          <v-row>
+            <v-col cols="12" md="6" class="flex-shrink-1 flex-grow-0">
+              <h2 class="my-4 text-h4">Regioni</h2>
+              <v-data-table
+                v-if="regioni"
+                :disable-pagination="true"
+                :headers="headers_regioni"
+                :items="regioni[1].DM1"
+                :items-per-page="-1"
+                hide-default-footer
+                class="elevation-12"
+              >
+                <template
+                  v-slot:item.percentuale="{ item }" >
+                  {{ (item.C[2]*100).toFixed(2) }} %
+                </template>
+              </v-data-table>
+            </v-col>
+            <v-col cols="12" md="2" class="flex-shrink-1 flex-grow-0">
+              <h2 class="my-4 text-h4">Età</h2>
+              <v-data-table
+                v-if="eta"
+                :disable-pagination="true"
+                :headers="headers_eta"
+                :items="eta"
+                :items-per-page="-1"
+                hide-default-footer
+                class="elevation-12"
+              >
+              </v-data-table>
+            </v-col>
+            <v-col cols="12" md="4" class="flex-shrink-0 flex-grow-1">
+              <h2 class="my-4 text-h4">Categoria</h2>
+              <v-data-table
+                v-if="categorie"
+                :disable-pagination="true"
+                :headers="headers_categorie"
+                :items="categorie"
+                :items-per-page="-1"
+                hide-default-footer
+                class="elevation-12"
+              >
+              </v-data-table>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-main>
+    </v-app>
+  </div>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      vuetify: new Vuetify({theme: { dark: true }}),
+      data () {
+        return {
+          regioni: null,
+          eta: null,
+          categorie: null,
+          headers_regioni: [
+            { text: 'Regione', value: 'C[0]' },
+            { text: 'Dosi consegnate', value: 'C[1]', align: 'end' },
+            { text: 'Somministrazioni', value: 'C[3]', align: 'end' },
+            { text: 'Percentuale', value: 'percentuale', align: 'end' }
+          ],
+          headers_eta: [
+            { text: 'Età', value: 'C[0]' },
+            { text: 'Vaccinazioni', value: 'C[1]', align: 'end' }
+          ],
+          headers_categorie: [
+            { text: 'Categoria', value: 'C[0]' },
+            { text: 'Vaccinazioni', value: 'C[1]', align: 'end' }
+          ]
+        }
+      },
+      mounted () {
+        axios
+          .post('https://wabi-europe-north-b-api.analysis.windows.net/public/reports/querydata',{"version":"1.0.0","queries":[{"Query":{"Commands":[{"SemanticQueryDataShapeCommand":{"Query":{"Version":2,"From":[{"Name":"t2","Entity":"TAB_REGIONI","Type":0},{"Name":"t","Entity":"TAB_MASTER","Type":0},{"Name":"c","Entity":"cfg VACCINI_DOSICONSEGNATEREGIONI","Type":0}],"Select":[{"Column":{"Expression":{"SourceRef":{"Source":"t2"}},"Property":"AREA"},"Name":"TAB_REGIONI.AREA"},{"Aggregation":{"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"t"}},"Property":"TOT_SOMM"}},"Function":0},"Name":"Sum(TAB_MASTER.TOT_SOMM)"},{"Measure":{"Expression":{"SourceRef":{"Source":"t"}},"Property":"TassoVaccinazione"},"Name":"TAB_MASTER.TassoVaccinazione"},{"Aggregation":{"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"c"}},"Property":"TOT_DOSI"}},"Function":0},"Name":"CountNonNull(cfg VACCINI_DOSICONSEGNATEREGIONI.TOT_DOSI)"}],"OrderBy":[{"Direction":1,"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"t2"}},"Property":"AREA"}}}]},"Binding":{"Primary":{"Groupings":[{"Projections":[0,1,2,3],"Subtotal":1}]},"DataReduction":{"DataVolume":3,"Primary":{"Window":{"Count":500}}},"Version":1}}}]},"CacheKey":"{\"Commands\":[{\"SemanticQueryDataShapeCommand\":{\"Query\":{\"Version\":2,\"From\":[{\"Name\":\"t2\",\"Entity\":\"TAB_REGIONI\",\"Type\":0},{\"Name\":\"t\",\"Entity\":\"TAB_MASTER\",\"Type\":0},{\"Name\":\"c\",\"Entity\":\"cfg VACCINI_DOSICONSEGNATEREGIONI\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"t2\"}},\"Property\":\"AREA\"},\"Name\":\"TAB_REGIONI.AREA\"},{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"t\"}},\"Property\":\"TOT_SOMM\"}},\"Function\":0},\"Name\":\"Sum(TAB_MASTER.TOT_SOMM)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"t\"}},\"Property\":\"TassoVaccinazione\"},\"Name\":\"TAB_MASTER.TassoVaccinazione\"},{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"TOT_DOSI\"}},\"Function\":0},\"Name\":\"CountNonNull(cfg VACCINI_DOSICONSEGNATEREGIONI.TOT_DOSI)\"}],\"OrderBy\":[{\"Direction\":1,\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"t2\"}},\"Property\":\"AREA\"}}}]},\"Binding\":{\"Primary\":{\"Groupings\":[{\"Projections\":[0,1,2,3],\"Subtotal\":1}]},\"DataReduction\":{\"DataVolume\":3,\"Primary\":{\"Window\":{\"Count\":500}}},\"Version\":1}}}]}","QueryId":"","ApplicationContext":{"DatasetId":"5bff6260-1025-49e0-8e9b-169ade7c07f9","Sources":[{"ReportId":"b548a77c-ab0a-4d7c-a457-2e38c2914fc6"}]}}],"cancelQueries":[],"modelId":4280811})
+          .then(response => (this.regioni = response.data.results[0].result.data.dsr.DS[0].PH))
+        axios
+          .post('https://wabi-europe-north-b-api.analysis.windows.net/public/reports/querydata',{"version":"1.0.0","queries":[{"Query":{"Commands":[{"SemanticQueryDataShapeCommand":{"Query":{"Version":2,"From":[{"Name":"t","Entity":"TAB_MASTER","Type":0},{"Name":"t1","Entity":"TAB_MASTER_PIVOT","Type":0}],"Select":[{"Column":{"Expression":{"SourceRef":{"Source":"t"}},"Property":"TML_FASCIA_ETA"},"Name":"TAB_MASTER.TML_FASCIA_ETA"},{"Aggregation":{"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"t1"}},"Property":"Valore"}},"Function":0},"Name":"Sum(TAB_MASTER_PIVOT.Valore)"}],"OrderBy":[{"Direction":1,"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"t"}},"Property":"TML_FASCIA_ETA"}}}]},"Binding":{"Primary":{"Groupings":[{"Projections":[0,1]}]},"DataReduction":{"DataVolume":4,"Primary":{"Window":{"Count":1000}}},"Version":1}}}]},"CacheKey":"{\"Commands\":[{\"SemanticQueryDataShapeCommand\":{\"Query\":{\"Version\":2,\"From\":[{\"Name\":\"t\",\"Entity\":\"TAB_MASTER\",\"Type\":0},{\"Name\":\"t1\",\"Entity\":\"TAB_MASTER_PIVOT\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"t\"}},\"Property\":\"TML_FASCIA_ETA\"},\"Name\":\"TAB_MASTER.TML_FASCIA_ETA\"},{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"t1\"}},\"Property\":\"Valore\"}},\"Function\":0},\"Name\":\"Sum(TAB_MASTER_PIVOT.Valore)\"}],\"OrderBy\":[{\"Direction\":1,\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"t\"}},\"Property\":\"TML_FASCIA_ETA\"}}}]},\"Binding\":{\"Primary\":{\"Groupings\":[{\"Projections\":[0,1]}]},\"DataReduction\":{\"DataVolume\":4,\"Primary\":{\"Window\":{\"Count\":1000}}},\"Version\":1}}}]}","QueryId":"","ApplicationContext":{"DatasetId":"5bff6260-1025-49e0-8e9b-169ade7c07f9","Sources":[{"ReportId":"b548a77c-ab0a-4d7c-a457-2e38c2914fc6"}]}}],"cancelQueries":[],"modelId":4280811})
+          .then(response => (this.eta = response.data.results[0].result.data.dsr.DS[0].PH[0].DM0))
+        axios
+          .post('https://wabi-europe-north-b-api.analysis.windows.net/public/reports/querydata',{"version":"1.0.0","queries":[{"Query":{"Commands":[{"SemanticQueryDataShapeCommand":{"Query":{"Version":2,"From":[{"Name":"t2","Entity":"TAB_MASTER_PIVOT","Type":0}],"Select":[{"Column":{"Expression":{"SourceRef":{"Source":"t2"}},"Property":"Categoria Attributo"},"Name":"TAB_MASTER_PIVOT.Categoria Attributo"},{"Aggregation":{"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"t2"}},"Property":"Valore"}},"Function":0},"Name":"Sum(TAB_MASTER_PIVOT.Valore)"}],"OrderBy":[{"Direction":1,"Expression":{"Column":{"Expression":{"SourceRef":{"Source":"t2"}},"Property":"Categoria Attributo"}}}]},"Binding":{"Primary":{"Groupings":[{"Projections":[0,1]}]},"DataReduction":{"DataVolume":4,"Primary":{"Window":{"Count":1000}}},"Version":1}}}]},"CacheKey":"{\"Commands\":[{\"SemanticQueryDataShapeCommand\":{\"Query\":{\"Version\":2,\"From\":[{\"Name\":\"t2\",\"Entity\":\"TAB_MASTER_PIVOT\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"t2\"}},\"Property\":\"Categoria Attributo\"},\"Name\":\"TAB_MASTER_PIVOT.Categoria Attributo\"},{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"t2\"}},\"Property\":\"Valore\"}},\"Function\":0},\"Name\":\"Sum(TAB_MASTER_PIVOT.Valore)\"}],\"OrderBy\":[{\"Direction\":1,\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"t2\"}},\"Property\":\"Categoria Attributo\"}}}]},\"Binding\":{\"Primary\":{\"Groupings\":[{\"Projections\":[0,1]}]},\"DataReduction\":{\"DataVolume\":4,\"Primary\":{\"Window\":{\"Count\":1000}}},\"Version\":1}}}]}","QueryId":"","ApplicationContext":{"DatasetId":"5bff6260-1025-49e0-8e9b-169ade7c07f9","Sources":[{"ReportId":"b548a77c-ab0a-4d7c-a457-2e38c2914fc6"}]}}],"cancelQueries":[],"modelId":4280811})
+          .then(response => (this.categorie = response.data.results[0].result.data.dsr.DS[0].PH[0].DM0))
+      }
+    })
+  </script>
+</body>
+</html>
