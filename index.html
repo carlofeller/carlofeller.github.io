@@ -4,11 +4,13 @@
   <title>Carlo Feller Github Page</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <link href="loader.css" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 </head>
 <body>
   <div id="app">
     <v-app>
+      <div id="pageLoader" class="loaderContent"><div class="spinner"></div></div>
       <v-main>
         <v-container fluid>
           <v-btn class="primary" href='/vaccini.html'>Vaccini Covid-19 Italia</v-btn>
@@ -19,10 +21,26 @@
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+
   <script>
     new Vue({
       el: '#app',
       vuetify: new Vuetify({theme: { dark: true }}),
+      mounted () {
+        if (!('remove' in Element.prototype)) {
+          Element.prototype.remove = function () {
+            if (this.parentNode) {
+              this.parentNode.removeChild(this)
+            }
+          }
+        }
+        // document.body.classList.remove('hidden')
+        const el = document.getElementById('pageLoader')
+        if (el) {
+          el.classList.add('hide')
+          setTimeout(el.remove(), 0.5)
+        }
+      }
     })
   </script>
 </body>
